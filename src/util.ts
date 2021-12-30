@@ -36,6 +36,46 @@ export function getWeightTweaker() {
   }
 }
 
+export function alignGenomes(a: Genome, b: Genome) {
+  const matching: { a: ConnectionGene; b: ConnectionGene }[] = [];
+  const aDisjoint: ConnectionGene[] = [];
+  const bDisjoint: ConnectionGene[] = [];
+  const aExcess: ConnectionGene[] = [];
+  const bExcess: ConnectionGene[] = [];
+
+  const aMax = last(a.connectionGenes).innovation;
+  const bMax = last(b.connectionGenes).innovation;
+
+  a.connectionGenes.forEach((con) => {
+    const match = b.connectionGenes.find(
+      (c) => con.innovation === c.innovation
+    );
+    if (match) {
+      matching.push({ a: con, b: match });
+    } else {
+      if (con.innovation < bMax) {
+        aDisjoint.push(con);
+      } else {
+        aExcess.push(con);
+      }
+    }
+  });
+
+  b.connectionGenes.forEach((con) => {
+    // We already have all the matches so we can look at the smaller array
+    const match = matching.find((c) => con.innovation === c.a.innovation);
+    if (!match) {
+      if (con.innovation < aMax) {
+        bDisjoint.push(con);
+      } else {
+        bExcess.push(con);
+      }
+    }
+  });
+
+  return { matching, aDisjoint, bDisjoint, aExcess, bExcess };
+}
+
 type WhoIsMoreFit = "a" | "b" | "tie";
 
 export function combineGenomeConnections(
@@ -43,38 +83,28 @@ export function combineGenomeConnections(
   b: Genome,
   whoIsMoreFit: WhoIsMoreFit
 ) {
-  const matching: ConnectionGene[] = [];
-  const disjoint: ConnectionGene[] = [];
-  a.connectionGenes.forEach((con) => {
-    const match = b.connectionGenes.find(
-      (c) => con.in === c.in && con.out === c.out
-    );
-    if (match) {
-      const toTake = Math.random() > 0.5 ? con : match;
-      matching.push(toTake);
-    } else {
-      if (whoIsMoreFit === "a") {
-        disjoint.push(con);
-      } else if (whoIsMoreFit === "tie") {
-        if (Math.random() > 0.5) disjoint.push(con);
-      }
-    }
-  });
+  const { aDisjoint, aExcess, bDisjoint, bExcess, matching } = alignGenomes(
+    a,
+    b
+  );
 
-  b.connectionGenes.forEach((con) => {
-    // We already have all the matches so we can look at the smaller array
-    const match = matching.find((c) => con.in === c.in && con.out === c.out);
-    if (!match) {
-      if (whoIsMoreFit === "b") {
-        disjoint.push(con);
-      } else if (whoIsMoreFit === "tie") {
-        if (Math.random() > 0.5) disjoint.push(con);
-      }
+  const strongerExtras: ConnectionGene[] = [];
+  if (whoIsMoreFit === "a") {
+    strongerExtras.push(...aDisjoint, ...aExcess);
+  } else if (whoIsMoreFit === "b") {
+    strongerExtras.push(...bDisjoint, ...bExcess);
+  } else {
+    for (const c of [...aDisjoint, ...aExcess, ...bDisjoint, ...bExcess]) {
+      if (Math.random() > 0.5) strongerExtras.push(c);
     }
-  });
+  }
+
+  const randomizedMatches = matching.map((m) =>
+    Math.random() > 0.5 ? m.a : m.b
+  );
 
   const connectionGenes = sortBy(
-    [...matching, ...disjoint],
+    [...randomizedMatches, ...strongerExtras],
     (c) => c.innovation
   );
 
@@ -104,34 +134,26 @@ export function isInSpecie(
 
   const repMax = last(rep.connectionGenes).innovation;
 
-  let disjointCount = 0;
-  let excessCount = 0;
+  const { aDisjoint, aExcess, bDisjoint, bExcess, matching } = alignGenomes(
+    genome,
+    rep
+  );
+
   let weightSum = 0;
   let weightCount = 0;
-  genome.connectionGenes.forEach((con) => {
-    const match = rep.connectionGenes.find(
-      (c) => c.in === con.in && c.out === con.out
-    );
-    if (match) {
-      // TODO: Unclear if this weight should be absolute
-      const diff = Math.abs(match.weight - con.weight);
-      weightSum += diff;
-      weightCount++;
-    } else {
-      if (con.innovation < repMax) {
-        disjointCount++;
-      } else {
-        excessCount++;
-      }
-    }
+  matching.forEach((match) => {
+    const diff = Math.abs(match.a.weight - match.b.weight);
+    weightSum += diff;
+    weightCount++;
   });
 
   // excess count
-  const e = excessCount;
+  const e = aExcess.length + bExcess.length;
   // disjoint count
-  const d = disjointCount;
+  const d = aDisjoint.length + bDisjoint.length;
   // number of genes in larger genome
-  const n = Math.max(genome.connectionGenes.length, rep.connectionGenes.length);
+  let n = Math.max(genome.connectionGenes.length, rep.connectionGenes.length);
+  if (n < 20) n = 1;
   // avg weight differences of matching genes
   const w = weightSum / weightCount;
 
