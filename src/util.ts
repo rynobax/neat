@@ -1,4 +1,4 @@
-import { last, random, shuffle, sortBy } from "lodash";
+import { last, random, shuffle, sortBy, uniqBy } from "lodash";
 import type Genome from "./Genome";
 import type { ConnectionGene } from "./Genome";
 
@@ -72,5 +72,24 @@ export function combineGenomeConnections(
     }
   });
 
-  return sortBy([...matching, ...disjoint], (c) => c.innovation);
+  const connectionGenes = sortBy(
+    [...matching, ...disjoint],
+    (c) => c.innovation
+  );
+
+  const nodeGenes = uniqBy(
+    [...a.nodeGenes, ...b.nodeGenes],
+    (n) => n.id
+  ).filter((e) => connectionGenes.some((c) => c.in === e.id || c.out === e.id));
+
+  return {
+    connectionGenes,
+    nodeGenes,
+  };
+}
+
+let nodeId = 10000;
+export function newNodeId() {
+  nodeId++;
+  return nodeId;
 }

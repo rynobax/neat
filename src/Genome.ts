@@ -2,15 +2,22 @@ import { random } from "lodash";
 import {
   combineGenomeConnections,
   getWeightTweaker,
+  newNodeId,
   percentChance,
   randomWeight,
   takeRandom,
+  takeRandomPair,
 } from "./util";
 
 enum NodeType {
   input,
   output,
   hidden,
+}
+
+interface Node {
+  type: NodeType;
+  id: number;
 }
 
 export interface ConnectionGene {
@@ -22,15 +29,15 @@ export interface ConnectionGene {
 }
 
 class Genome {
-  private nodeGenes: NodeType[];
+  public nodeGenes: Node[];
 
-  connectionGenes: ConnectionGene[];
+  public connectionGenes: ConnectionGene[];
 
   constructor(
     private inputLength: number,
     private outputLength: number,
     private getInnovationNumber: () => number,
-    nodeGenes?: NodeType[],
+    nodeGenes?: Node[],
     connectionGenes?: ConnectionGene[]
   ) {
     this.nodeGenes = nodeGenes || this.initialNodeGenes();
@@ -38,12 +45,12 @@ class Genome {
   }
 
   private initialNodeGenes() {
-    const nodeGenes: NodeType[] = [];
+    const nodeGenes: Node[] = [];
     for (let i = 0; i < this.inputLength; i++) {
-      nodeGenes.push(NodeType.input);
+      nodeGenes.push({ id: newNodeId(), type: NodeType.input });
     }
     for (let i = 0; i < this.outputLength; i++) {
-      nodeGenes.push(NodeType.output);
+      nodeGenes.push({ id: newNodeId(), type: NodeType.output });
     }
     return nodeGenes;
   }
@@ -110,18 +117,17 @@ class Genome {
     const n = this.nodeGenes.length;
     const maxAttempts = (n * (n - 1)) / 2 + 50;
     while (attempts < maxAttempts) {
-      const start = random(0, n - 1);
-      const end = random(0, n - 1);
+      const [start, end] = takeRandomPair(this.nodeGenes);
       const exists = this.connectionGenes.some(
-        (c) => c.in === start && c.out === end
+        (c) => c.in === start.id && c.out === end.id
       );
       if (!exists) {
         // TODO: Handle identical innovation in same generation
         this.connectionGenes.push({
           enabled: true,
-          in: start,
+          in: start.id,
           innovation: this.getInnovationNumber(),
-          out: end,
+          out: end.id,
           weight: randomWeight(),
         });
         return;
@@ -138,19 +144,19 @@ class Genome {
       (c) => c.in === oldCon.in && c.out === oldCon.out
     );
     // Add new node
-    this.nodeGenes.push(NodeType.hidden);
-    const newNode = this.nodeGenes.length;
+    const newNode = { id: newNodeId(), type: NodeType.hidden };
+    this.nodeGenes.push(newNode);
     // Add new connections
     this.connectionGenes.push(
       {
         in: oldCon.in,
-        out: newNode,
+        out: newNode.id,
         enabled: true,
         innovation: this.getInnovationNumber(),
         weight: 1,
       },
       {
-        in: newNode,
+        in: newNode.id,
         out: oldCon.out,
         enabled: true,
         innovation: this.getInnovationNumber(),
@@ -160,14 +166,17 @@ class Genome {
   }
 
   public mate(other: Genome, whoIsMoreFit: "a" | "b" | "tie"): Genome {
-    const connections = combineGenomeConnections(this, other, whoIsMoreFit);
+    const { connectionGenes, nodeGenes } = combineGenomeConnections(
+      this,
+      other,
+      whoIsMoreFit
+    );
     return new Genome(
       this.inputLength,
       this.outputLength,
       this.getInnovationNumber,
-      // TODO: Calculate node genes
-      [],
-      connections
+      nodeGenes,
+      connectionGenes
     );
   }
 }

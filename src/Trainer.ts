@@ -83,7 +83,7 @@ class Trainer {
           const [a, b] = takeRandomPair(species.members);
           const aFitness = this.measureFitness(a);
           const bFitness = this.measureFitness(b);
-          let whoIsMoreFit = "tie";
+          let whoIsMoreFit: "a" | "b" | "tie" = "tie";
           if (aFitness > bFitness) whoIsMoreFit = "a";
           if (bFitness > aFitness) whoIsMoreFit = "b";
           newGenomes.push(a.mate(b, whoIsMoreFit));
