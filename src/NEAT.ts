@@ -1,31 +1,53 @@
-type FitnessScore = number;
+import Genome from "./Genome";
+import Trainer, { ModelParameters } from "./Trainer";
 
-interface NEATOptions<Input, Output> {
-  measureFitness: (genome: Genome<Input, Output>) => FitnessScore;
+interface NEATOptions {
+  inputLength: number;
+  measureFitness: (genome: Genome) => number;
+  outputLength: number;
+  parameters?: Partial<ModelParameters>;
 }
 
-class NEAT<Input, Output> {
-  private measureFitness: (genome: Genome<Input, Output>) => number;
+class NEAT {
+  inputLength: number;
 
-  constructor({ measureFitness }: NEATOptions<Input, Output>) {
+  private measureFitness: (genome: Genome) => number;
+
+  outputLength: number;
+
+  private parameters: Partial<ModelParameters> | undefined;
+
+  constructor({
+    inputLength,
+    measureFitness,
+    outputLength,
+    parameters,
+  }: NEATOptions) {
+    this.inputLength = inputLength;
     this.measureFitness = measureFitness;
+    this.outputLength = outputLength;
+    this.parameters = parameters;
   }
 
-  private topGenome: Genome<Input, Output>;
+  private topGenome: Genome;
 
-  public train() {
-    this.topGenome = new Genome();
-  }
-
-  public evaluateWithBestModel(input: Input): Output {
+  public evaluateWithBestModel(input: number[]): number[] {
     if (!this.topGenome) throw Error("Model has not been trained");
     return this.topGenome.evaluate(input);
   }
-}
 
-class Genome<Input, Output> {
-  public evaluate(input: Input): Output {
-    return null;
+  public train() {
+    const trainer = new Trainer(
+      this.inputLength,
+      this.outputLength,
+      this.measureFitness,
+      this.parameters
+    );
+    trainer.run();
+  }
+
+  private nextGeneration(genomes: Genome[]): Genome[] {
+    return genomes;
   }
 }
 

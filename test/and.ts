@@ -10,7 +10,7 @@ const TRAINING_INPUT: Array<[number, number]> = [
 const TRAINING_OUTPUT: Array<[number]> = [[0], [0], [0], [1]];
 
 async function main() {
-  const neat = new NEAT<[number, number], [number]>({
+  const neat = new NEAT({
     measureFitness: (genome) => {
       let score = 0;
       for (let i = 0; i < TRAINING_INPUT.length; i++) {
@@ -26,6 +26,8 @@ async function main() {
       score = Math.pow(score, 2);
       return score;
     },
+    inputLength: 2,
+    outputLength: 1,
   });
 
   neat.train();
