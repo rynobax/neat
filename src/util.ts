@@ -1,6 +1,7 @@
 import { last, random, shuffle, sortBy, uniqBy } from "lodash";
 import type Genome from "./Genome";
 import type { ConnectionGene } from "./Genome";
+import type { ModelParameters, Specie } from "./Trainer";
 
 export function takeRandom<T>(arr: Array<T>) {
   return shuffle(arr)[0];
@@ -92,4 +93,49 @@ let nodeId = 10000;
 export function newNodeId() {
   nodeId++;
   return nodeId;
+}
+
+export function isInSpecie(
+  genome: Genome,
+  specie: Specie,
+  { c1, c2, c3, speciesThreshold }: ModelParameters
+) {
+  const { rep } = specie;
+
+  const repMax = last(rep.connectionGenes).innovation;
+
+  let disjointCount = 0;
+  let excessCount = 0;
+  let weightSum = 0;
+  let weightCount = 0;
+  genome.connectionGenes.forEach((con) => {
+    const match = rep.connectionGenes.find(
+      (c) => c.in === con.in && c.out === con.out
+    );
+    if (match) {
+      // TODO: Unclear if this weight should be absolute
+      const diff = Math.abs(match.weight - con.weight);
+      weightSum += diff;
+      weightCount++;
+    } else {
+      if (con.innovation < repMax) {
+        disjointCount++;
+      } else {
+        excessCount++;
+      }
+    }
+  });
+
+  // excess count
+  const e = excessCount;
+  // disjoint count
+  const d = disjointCount;
+  // number of genes in larger genome
+  const n = Math.max(genome.connectionGenes.length, rep.connectionGenes.length);
+  // avg weight differences of matching genes
+  const w = weightSum / weightCount;
+
+  const delta = (c1 * e) / n + (c2 * d) / n + c3 * w;
+
+  return delta <= speciesThreshold;
 }

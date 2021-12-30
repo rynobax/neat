@@ -1,25 +1,19 @@
 import { at, random } from "lodash";
 import { v4 as uuid } from "uuid";
 import Genome from "./Genome";
+import { DEFAULT_MODEL_PARAMETERS } from "./params";
 import {
   percentChance,
   takeRandomPair,
   takeRandom,
   randomWeight,
   getWeightTweaker,
+  isInSpecie,
 } from "./util";
-
-const DEFAULT_MODEL_PARAMETERS = {
-  c1: 1,
-  c2: 1,
-  c3: 0.4,
-  populationSize: 150,
-  speciesThreshold: 3,
-};
 
 export type ModelParameters = typeof DEFAULT_MODEL_PARAMETERS;
 
-interface Specie {
+export interface Specie {
   id: string;
   rep: Genome;
 }
@@ -106,7 +100,7 @@ class Trainer {
     for (const genome of this.genomes) {
       let found = false;
       for (const specie of this.species) {
-        if (this.isInSpecie(genome, specie)) {
+        if (isInSpecie(genome, specie, this.parameters)) {
           // add to group
           speciesGroups[specie.id];
           found = true;
@@ -150,24 +144,6 @@ class Trainer {
   }
 
   // TODO: Implement
-  private isInSpecie(genome: Genome, specie: Specie) {
-    const { c1, c2, c3, speciesThreshold } = this.parameters;
-
-    const { rep } = specie;
-
-    // excess count
-    const e = 0;
-    // disjoint count
-    const d = 0;
-    // number of genes in larger genome
-    const n = 0;
-    // avg weight differences of matching genes
-    const w = 0;
-
-    const delta = (c1 * e) / n + (c2 * d) / n + c3 * w;
-
-    return delta <= speciesThreshold;
-  }
 
   private getInnovationNumber() {
     this.innovation++;

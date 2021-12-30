@@ -9,13 +9,13 @@ import {
   takeRandomPair,
 } from "./util";
 
-enum NodeType {
+export enum NodeType {
   input,
   output,
   hidden,
 }
 
-interface Node {
+export interface NodeGene {
   type: NodeType;
   id: number;
 }
@@ -29,7 +29,7 @@ export interface ConnectionGene {
 }
 
 class Genome {
-  public nodeGenes: Node[];
+  public nodeGenes: NodeGene[];
 
   public connectionGenes: ConnectionGene[];
 
@@ -37,7 +37,7 @@ class Genome {
     private inputLength: number,
     private outputLength: number,
     private getInnovationNumber: () => number,
-    nodeGenes?: Node[],
+    nodeGenes?: NodeGene[],
     connectionGenes?: ConnectionGene[]
   ) {
     this.nodeGenes = nodeGenes || this.initialNodeGenes();
@@ -45,7 +45,7 @@ class Genome {
   }
 
   private initialNodeGenes() {
-    const nodeGenes: Node[] = [];
+    const nodeGenes: NodeGene[] = [];
     for (let i = 0; i < this.inputLength; i++) {
       nodeGenes.push({ id: newNodeId(), type: NodeType.input });
     }
