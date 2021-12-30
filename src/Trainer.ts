@@ -27,7 +27,7 @@ interface SpeciesGroup {
 class Trainer {
   genomes: Genome[];
 
-  species: Specie[];
+  species: Specie[] = [];
 
   parameters: ModelParameters;
 
@@ -54,24 +54,36 @@ class Trainer {
     this.genomes = initialGenomes;
   }
 
-  public run() {
-    for (let i = 0; i < 10; i++) {
+  public run = () => {
+    for (let i = 0; i < 1; i++) {
+      console.log("evolution ", i, this.genomes.length);
       this.evolve();
     }
-  }
+
+    let best;
+    let bestScore = 0;
+
+    for (const g of this.genomes) {
+      const score = this.measureFitness(g);
+      if (score > bestScore) {
+        best = g;
+        bestScore = score;
+      }
+    }
+    return best;
+  };
 
   // TODO: Handle champion
-  // TODO: Handle population failing to increase over time
+  // TODO: Handle population failing to increase over time (only take top 2)
   // TODO: Interspecies mating
-  private evolve() {
+  private evolve = () => {
     const speciesGroups = this.computeSpeciesGroups();
     const newGenomes: Genome[] = [];
 
     for (const species of speciesGroups) {
       for (let i = 0; i < species.numOfChildren; i++) {
-        // TODO: Make genomes do something
-
-        const shouldMate = percentChance(75);
+        // TODO: What to do if only 1 child
+        const shouldMate = percentChance(75) && species.members.length >= 2;
         if (shouldMate) {
           // mating
           const [a, b] = takeRandomPair(species.members);
@@ -87,9 +99,13 @@ class Trainer {
         }
       }
     }
-  }
 
-  private computeSpeciesGroups() {
+    this.genomes = newGenomes;
+  };
+
+  // TODO: Keeping around old species is causing everything to go to 0
+  // TODO: May need to remove old species at some point
+  private computeSpeciesGroups = () => {
     const speciesGroups = this.species.reduce<Record<string, SpeciesGroup>>(
       (p, c) => {
         p[c.id] = { id: c.id, members: [], numOfChildren: 0 };
@@ -110,11 +126,13 @@ class Trainer {
 
       if (!found) {
         // make new group
+        const id = uuid();
         const newSpecie: SpeciesGroup = {
-          id: uuid(),
+          id,
           members: [genome],
           numOfChildren: 0,
         };
+        this.species.push({ id, rep: genome });
         speciesGroups[newSpecie.id] = newSpecie;
       }
     }
@@ -136,19 +154,21 @@ class Trainer {
 
     Object.values(speciesGroups).forEach((specie) => {
       const fitness = groupFitnessValues[specie.id];
+      if (fitness === 0) return;
       const pct = fitness / sumOfAdjFitnessAvgs;
+      console.log({ pct, fitness, sumOfAdjFitnessAvgs });
       specie.numOfChildren = Math.round(pct * this.parameters.populationSize);
     });
 
     return Object.values(speciesGroups);
-  }
+  };
 
   // TODO: Implement
 
-  private getInnovationNumber() {
+  private getInnovationNumber = () => {
     this.innovation++;
     return this.innovation;
-  }
+  };
 }
 
 export default Trainer;
