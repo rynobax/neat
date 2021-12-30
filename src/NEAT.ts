@@ -31,24 +31,23 @@ class NEAT {
 
   private topGenome: Genome;
 
-  public evaluateWithBestModel(input: number[]): number[] {
+  public evaluateWithBestModel = (input: number[]): number[] => {
     if (!this.topGenome) throw Error("Model has not been trained");
     return this.topGenome.evaluate(input);
-  }
+  };
 
-  public train() {
+  public train = () => {
     const trainer = new Trainer(
       this.inputLength,
       this.outputLength,
       this.measureFitness,
       this.parameters
     );
-    trainer.run();
-  }
 
-  private nextGeneration(genomes: Genome[]): Genome[] {
-    return genomes;
-  }
+    const best = trainer.run();
+
+    this.topGenome = best;
+  };
 }
 
 export default NEAT;
