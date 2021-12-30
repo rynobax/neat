@@ -1,5 +1,5 @@
 import Genome, { ConnectionGene, NodeGene, NodeType } from "../Genome";
-import { isInSpecie } from "../util";
+import { alignGenomes, combineGenomeConnections, isInSpecie } from "../util";
 import { getInnovationNumber } from "./testUtil";
 import { DEFAULT_MODEL_PARAMETERS } from "../params";
 
@@ -78,6 +78,64 @@ describe("isInSpecie", () => {
   });
 });
 
-describe("alignGenomes", () => {});
+describe("alignGenomes", () => {
+  test("works", () => {
+    const genomeA = new Genome(1, 1, getInnovationNumber, nodeGenes, [
+      { enabled: true, in: 1, innovation: 1, out: 2, weight: 1 },
+      { enabled: true, in: 1, innovation: 2, out: 2, weight: 1 },
+      { enabled: true, in: 1, innovation: 3, out: 2, weight: 1 },
+      { enabled: true, in: 1, innovation: 6, out: 2, weight: 1 },
+    ]);
+    const genomeB = new Genome(1, 1, getInnovationNumber, nodeGenes, [
+      { enabled: true, in: 1, innovation: 1, out: 2, weight: 2 },
+      { enabled: true, in: 1, innovation: 3, out: 2, weight: 2 },
+      { enabled: true, in: 1, innovation: 4, out: 2, weight: 2 },
+      { enabled: true, in: 1, innovation: 7, out: 2, weight: 2 },
+      { enabled: true, in: 1, innovation: 8, out: 2, weight: 2 },
+    ]);
+    const { aDisjoint, aExcess, bDisjoint, bExcess, matching } = alignGenomes(
+      genomeA,
+      genomeB
+    );
+    expect(matching).toEqual([
+      {
+        a: { enabled: true, in: 1, innovation: 1, out: 2, weight: 1 },
+        b: { enabled: true, in: 1, innovation: 1, out: 2, weight: 2 },
+      },
+      {
+        a: { enabled: true, in: 1, innovation: 3, out: 2, weight: 1 },
+        b: { enabled: true, in: 1, innovation: 3, out: 2, weight: 2 },
+      },
+    ]);
+    expect(aDisjoint).toEqual([
+      { enabled: true, in: 1, innovation: 2, out: 2, weight: 1 },
+      { enabled: true, in: 1, innovation: 6, out: 2, weight: 1 },
+    ]);
+    expect(bDisjoint).toEqual([
+      { enabled: true, in: 1, innovation: 4, out: 2, weight: 2 },
+    ]);
+    expect(aExcess).toEqual([]);
+    expect(bExcess).toEqual([
+      { enabled: true, in: 1, innovation: 7, out: 2, weight: 2 },
+      { enabled: true, in: 1, innovation: 8, out: 2, weight: 2 },
+    ]);
+  });
+});
 
-describe("combineGenomeConnections", () => {});
+describe("combineGenomeConnections", () => {
+  it("takes from the stronger", () => {
+    const genomeA = new Genome(1, 1, getInnovationNumber, nodeGenes, [
+      { enabled: true, in: 1, innovation: 1, out: 2, weight: 1 },
+    ]);
+    const genomeB = new Genome(1, 1, getInnovationNumber, nodeGenes, [
+      { enabled: true, in: 1, innovation: 1, out: 2, weight: 1 },
+      { enabled: true, in: 2, innovation: 2, out: 2, weight: 2 },
+    ]);
+    expect(
+      combineGenomeConnections(genomeA, genomeB, "b").connectionGenes
+    ).toEqual([
+      { enabled: true, in: 1, innovation: 1, out: 2, weight: 1 },
+      { enabled: true, in: 2, innovation: 2, out: 2, weight: 2 },
+    ]);
+  });
+});
