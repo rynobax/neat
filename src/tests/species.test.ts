@@ -1,11 +1,14 @@
+import Population from "../Population";
 import Genome, { ConnectionGene, NodeGene, NodeType } from "../Genome";
 import { alignGenomes, combineGenomeConnections, isInSpecie } from "../util";
 import { getInnovationNumber } from "./testUtil";
 import { DEFAULT_MODEL_PARAMETERS } from "../params";
 
+const getPopulation = () => new Population(1, 1, () => 1, {});
+
 const nodeGenes: NodeGene[] = [
-  { id: 1, type: NodeType.input },
-  { id: 2, type: NodeType.output },
+  { id: 1, type: NodeType.input, ndx: 0 },
+  { id: 2, type: NodeType.output, ndx: 0 },
 ];
 const connectionGenes: ConnectionGene[] = [
   { enabled: true, in: 1, innovation: 1, out: 2, weight: 1 },
@@ -13,47 +16,29 @@ const connectionGenes: ConnectionGene[] = [
 
 describe("isInSpecie", () => {
   test("same species returns true", () => {
-    const genome = new Genome(
-      1,
-      1,
-      getInnovationNumber,
-      nodeGenes,
-      connectionGenes
-    );
+    const genome = new Genome(getPopulation(), nodeGenes, connectionGenes);
     expect(
       isInSpecie(genome, { id: "1", rep: genome }, DEFAULT_MODEL_PARAMETERS)
     ).toEqual(true);
   });
 
   test("many excess genome returns false", () => {
-    const genome = new Genome(1, 1, getInnovationNumber, nodeGenes, [
+    const genome = new Genome(getPopulation(), nodeGenes, [
       { enabled: true, in: 1, innovation: 1, out: 2, weight: 1 },
       { enabled: true, in: 1, innovation: 2, out: 2, weight: 1 },
       { enabled: true, in: 1, innovation: 3, out: 2, weight: 1 },
       { enabled: true, in: 1, innovation: 4, out: 2, weight: 1 },
       { enabled: true, in: 1, innovation: 5, out: 2, weight: 1 },
     ]);
-    const rep = new Genome(
-      1,
-      1,
-      getInnovationNumber,
-      nodeGenes,
-      connectionGenes
-    );
+    const rep = new Genome(getPopulation(), nodeGenes, connectionGenes);
     expect(
       isInSpecie(genome, { id: "1", rep }, DEFAULT_MODEL_PARAMETERS)
     ).toEqual(false);
   });
 
   test("many excess rep returns false", () => {
-    const genome = new Genome(
-      1,
-      1,
-      getInnovationNumber,
-      nodeGenes,
-      connectionGenes
-    );
-    const rep = new Genome(1, 1, getInnovationNumber, nodeGenes, [
+    const genome = new Genome(getPopulation(), nodeGenes, connectionGenes);
+    const rep = new Genome(getPopulation(), nodeGenes, [
       { enabled: true, in: 1, innovation: 1, out: 2, weight: 1 },
       { enabled: true, in: 1, innovation: 2, out: 2, weight: 1 },
       { enabled: true, in: 1, innovation: 3, out: 2, weight: 1 },
@@ -66,10 +51,10 @@ describe("isInSpecie", () => {
   });
 
   test("weight differences returns false", () => {
-    const genome = new Genome(1, 1, getInnovationNumber, nodeGenes, [
+    const genome = new Genome(getPopulation(), nodeGenes, [
       { enabled: true, in: 1, innovation: 1, out: 2, weight: -8 },
     ]);
-    const rep = new Genome(1, 1, getInnovationNumber, nodeGenes, [
+    const rep = new Genome(getPopulation(), nodeGenes, [
       { enabled: true, in: 1, innovation: 1, out: 2, weight: 8 },
     ]);
     expect(
@@ -80,13 +65,13 @@ describe("isInSpecie", () => {
 
 describe("alignGenomes", () => {
   test("works", () => {
-    const genomeA = new Genome(1, 1, getInnovationNumber, nodeGenes, [
+    const genomeA = new Genome(getPopulation(), nodeGenes, [
       { enabled: true, in: 1, innovation: 1, out: 2, weight: 1 },
       { enabled: true, in: 1, innovation: 2, out: 2, weight: 1 },
       { enabled: true, in: 1, innovation: 3, out: 2, weight: 1 },
       { enabled: true, in: 1, innovation: 6, out: 2, weight: 1 },
     ]);
-    const genomeB = new Genome(1, 1, getInnovationNumber, nodeGenes, [
+    const genomeB = new Genome(getPopulation(), nodeGenes, [
       { enabled: true, in: 1, innovation: 1, out: 2, weight: 2 },
       { enabled: true, in: 1, innovation: 3, out: 2, weight: 2 },
       { enabled: true, in: 1, innovation: 4, out: 2, weight: 2 },
@@ -124,10 +109,10 @@ describe("alignGenomes", () => {
 
 describe("combineGenomeConnections", () => {
   it("takes from the stronger", () => {
-    const genomeA = new Genome(1, 1, getInnovationNumber, nodeGenes, [
+    const genomeA = new Genome(getPopulation(), nodeGenes, [
       { enabled: true, in: 1, innovation: 1, out: 2, weight: 1 },
     ]);
-    const genomeB = new Genome(1, 1, getInnovationNumber, nodeGenes, [
+    const genomeB = new Genome(getPopulation(), nodeGenes, [
       { enabled: true, in: 1, innovation: 1, out: 2, weight: 1 },
       { enabled: true, in: 2, innovation: 2, out: 2, weight: 2 },
     ]);

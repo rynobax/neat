@@ -24,32 +24,24 @@ interface SpeciesGroup {
   numOfChildren: number;
 }
 
-class Population {
+class Trainer {
   genomes: Genome[];
 
   species: Specie[] = [];
 
   parameters: ModelParameters;
 
-  innovation = 1;
-
   constructor(
-    private inputLength: number,
-    private outputLength: number,
-    private measureFitness: (genome: Genome) => number,
+    public inputLength: number,
+    public outputLength: number,
+    public measureFitness: (genome: Genome) => number,
     parameters: Partial<ModelParameters> | undefined
   ) {
     this.parameters = { ...DEFAULT_MODEL_PARAMETERS, ...parameters };
 
     const initialGenomes: Genome[] = [];
     for (let i = 0; i < this.parameters.populationSize; i++) {
-      initialGenomes.push(
-        new Genome(
-          this.inputLength,
-          this.outputLength,
-          this.getInnovationNumber
-        )
-      );
+      initialGenomes.push(new Genome(this));
     }
     this.genomes = initialGenomes;
   }
@@ -170,15 +162,19 @@ class Population {
     return Object.values(speciesGroups);
   };
 
-  // TODO: Implement
+  startNewGenerationInnovation() {
+    this.generationalInnovations = [];
+    this.generationalNodes = [];
+  }
 
   private generationalInnovations: {
     in: number;
     out: number;
     innovation: number;
   }[] = [];
+  private innovation = 1;
 
-  getInnovationNumber = (newConnection: { in: number; out: number }) => {
+  public getInnovationNumber = (newConnection: { in: number; out: number }) => {
     const existingInnovation = this.generationalInnovations.find(
       (i) => i.in === newConnection.in && i.out === newConnection.out
     );
@@ -191,9 +187,25 @@ class Population {
     return this.innovation;
   };
 
-  startNewGenerationInnovation() {
-    this.generationalInnovations = [];
-  }
+  private generationalNodes: {
+    in: number | null;
+    out: number | null;
+    id: number;
+  }[] = [];
+  private nodeId = 10000;
+
+  public getNodeId = (newNode: { in: number | null; out: number | null }) => {
+    const existingNode = this.generationalNodes.find(
+      (i) => i.in === newNode.in && i.out === newNode.out
+    );
+    if (existingNode) return existingNode.id;
+    this.nodeId++;
+    this.generationalNodes.push({
+      ...newNode,
+      id: this.nodeId,
+    });
+    return this.nodeId;
+  };
 }
 
-export default Population;
+export default Trainer;

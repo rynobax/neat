@@ -36,3 +36,40 @@ describe("getInnovationNumber", () => {
     expect(b).toBeGreaterThan(a);
   });
 });
+
+describe("getNodeId", () => {
+  test("returns bigger id each time", () => {
+    const population = new Population(1, 1, () => 1, {});
+    population.startNewGenerationInnovation();
+
+    const a = population.getNodeId({ in: 1, out: 2 });
+    const b = population.getNodeId({ in: 3, out: 4 });
+    const c = population.getNodeId({ in: 5, out: 6 });
+
+    expect(b).toBeGreaterThan(a);
+    expect(c).toBeGreaterThan(b);
+  });
+
+  test("same innovation gets same id", () => {
+    const population = new Population(1, 1, () => 1, {});
+    population.startNewGenerationInnovation();
+
+    const a = population.getNodeId({ in: 1, out: 2 });
+    const b = population.getNodeId({ in: 1, out: 2 });
+
+    expect(a).toEqual(b);
+  });
+
+  test("same innovation on different generation gets different id", () => {
+    const population = new Population(1, 1, () => 1, {});
+    population.startNewGenerationInnovation();
+
+    const a = population.getNodeId({ in: 1, out: 2 });
+
+    population.startNewGenerationInnovation();
+
+    const b = population.getNodeId({ in: 1, out: 2 });
+
+    expect(b).toBeGreaterThan(a);
+  });
+});
