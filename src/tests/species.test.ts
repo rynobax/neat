@@ -146,19 +146,43 @@ describe("combineGenomeConnections", () => {
   });
 });
 
-describe.skip("computeNextSpecies", () => {
-  const params = DEFAULT_MODEL_PARAMETERS;
+describe("computeNextSpecies", () => {
   const measureFitness = () => 1;
 
-  it("works for initial group", () => {
-    const prev: Specie[] = [];
-    const genomes = [
-      new Genome(getPopulation),
-      new Genome(getPopulation),
-      new Genome(getPopulation),
-    ];
-    expect(computeNextSpecies(prev, genomes, params, measureFitness)).toEqual(
-      []
-    );
+  const nGenomes = (n: number) => {
+    const pop = getPopulation();
+    return new Array(n)
+      .fill(null)
+      .map(() => new Genome(() => pop, nodeGenes, connectionGenes));
+  };
+
+  describe("initial species", () => {
+    it("only one species to start", () => {
+      const prev: Specie[] = [];
+      const popSize = 100;
+      const genomes = nGenomes(popSize);
+      expect(
+        computeNextSpecies(
+          prev,
+          genomes,
+          { ...DEFAULT_MODEL_PARAMETERS, populationSize: popSize },
+          measureFitness
+        )
+      ).toHaveLength(1);
+    });
+
+    it("should keep number of genomes the same", () => {
+      const prev: Specie[] = [];
+      const popSize = 100;
+      const genomes = nGenomes(popSize);
+      const next = computeNextSpecies(
+        prev,
+        genomes,
+        { ...DEFAULT_MODEL_PARAMETERS, populationSize: popSize },
+        measureFitness
+      );
+      const numNextGenomes = next.reduce((p, c) => p + c.numOfChildren, 0);
+      expect(numNextGenomes).toEqual(popSize);
+    });
   });
 });
