@@ -172,7 +172,7 @@ class Trainer {
     out: number;
     innovation: number;
   }[] = [];
-  private innovation = 1;
+  private innovation = 0;
 
   public getInnovationNumber = (newConnection: { in: number; out: number }) => {
     const existingInnovation = this.generationalInnovations.find(
