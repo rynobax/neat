@@ -95,7 +95,6 @@ class Genome {
   // TODO: Unclear if this is best way, look at his code
   public evaluate = (input: number[]): number[] => {
     let depth = 0;
-    let complete = false;
 
     const results: Record<number, { sum: number; left: number }> = {};
 

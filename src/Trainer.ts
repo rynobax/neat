@@ -55,7 +55,7 @@ class Trainer {
   }
 
   public run = () => {
-    for (let i = 0; i < 1; i++) {
+    for (let i = 0; i < 3; i++) {
       console.log("evolution ", i, this.genomes.length);
       this.evolve();
     }
@@ -78,6 +78,11 @@ class Trainer {
   // TODO: Interspecies mating
   private evolve = () => {
     const speciesGroups = this.computeSpeciesGroups();
+    console.log("after evolution x species: ", speciesGroups.length);
+    this.species = speciesGroups.map((s) => ({
+      id: s.id,
+      rep: takeRandom(s.members),
+    }));
     const newGenomes: Genome[] = [];
 
     for (const species of speciesGroups) {
@@ -106,6 +111,8 @@ class Trainer {
   // TODO: Keeping around old species is causing everything to go to 0
   // TODO: May need to remove old species at some point
   private computeSpeciesGroups = () => {
+    const speciesToLookThrough = [...this.species];
+
     const speciesGroups = this.species.reduce<Record<string, SpeciesGroup>>(
       (p, c) => {
         p[c.id] = { id: c.id, members: [], numOfChildren: 0 };
@@ -115,7 +122,7 @@ class Trainer {
     );
     for (const genome of this.genomes) {
       let found = false;
-      for (const specie of this.species) {
+      for (const specie of speciesToLookThrough) {
         if (isInSpecie(genome, specie, this.parameters)) {
           // add to group
           speciesGroups[specie.id];
@@ -132,8 +139,8 @@ class Trainer {
           members: [genome],
           numOfChildren: 0,
         };
-        this.species.push({ id, rep: genome });
         speciesGroups[newSpecie.id] = newSpecie;
+        speciesToLookThrough.push({ id, rep: genome });
       }
     }
 
@@ -156,7 +163,6 @@ class Trainer {
       const fitness = groupFitnessValues[specie.id];
       if (fitness === 0) return;
       const pct = fitness / sumOfAdjFitnessAvgs;
-      console.log({ pct, fitness, sumOfAdjFitnessAvgs });
       specie.numOfChildren = Math.round(pct * this.parameters.populationSize);
     });
 
