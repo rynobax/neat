@@ -1,5 +1,5 @@
 import Genome from "./Genome";
-import Trainer, { ModelParameters } from "./Trainer";
+import Population, { ModelParameters } from "./Population";
 
 interface NEATOptions {
   inputLength: number;
@@ -37,14 +37,14 @@ class NEAT {
   };
 
   public train = () => {
-    const trainer = new Trainer(
+    const population = new Population(
       this.inputLength,
       this.outputLength,
       this.measureFitness,
       this.parameters
     );
 
-    const best = trainer.run();
+    const best = population.run();
 
     this.topGenome = best;
   };

@@ -1,7 +1,7 @@
 import { last, random, shuffle, sortBy, uniqBy } from "lodash";
 import type Genome from "./Genome";
 import type { ConnectionGene } from "./Genome";
-import type { ModelParameters, Specie } from "./Trainer";
+import type { ModelParameters, Specie } from "./Population";
 
 export function takeRandom<T>(arr: Array<T>) {
   return shuffle(arr)[0];
@@ -117,12 +117,6 @@ export function combineGenomeConnections(
     connectionGenes,
     nodeGenes,
   };
-}
-
-let nodeId = 10000;
-export function newNodeId() {
-  nodeId++;
-  return nodeId;
 }
 
 export function isInSpecie(

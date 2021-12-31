@@ -2,7 +2,6 @@ import { random } from "lodash";
 import {
   combineGenomeConnections,
   getWeightTweaker,
-  newNodeId,
   percentChance,
   randomWeight,
   takeRandom,
@@ -64,10 +63,10 @@ class Genome {
   private initialNodeGenes = () => {
     const nodeGenes: NodeGene[] = [];
     for (let i = 0; i < this.inputLength; i++) {
-      nodeGenes.push({ id: newNodeId(), type: NodeType.input, ndx: i });
+      nodeGenes.push({ id: this.newNodeId(), type: NodeType.input, ndx: i });
     }
     for (let i = 0; i < this.outputLength; i++) {
-      nodeGenes.push({ id: newNodeId(), type: NodeType.output, ndx: i });
+      nodeGenes.push({ id: this.newNodeId(), type: NodeType.output, ndx: i });
     }
     return nodeGenes;
   };
@@ -234,7 +233,7 @@ class Genome {
       (c) => c.in === oldCon.in && c.out === oldCon.out
     );
     // Add new node
-    const newNode = { id: newNodeId(), type: NodeType.hidden } as const;
+    const newNode = { id: this.newNodeId(), type: NodeType.hidden } as const;
     this.nodeGenes.push(newNode);
     // Add new connections
     this.connectionGenes.push(
@@ -275,6 +274,12 @@ class Genome {
       nodeGenes,
       connectionGenes
     );
+  };
+
+  nodeId = 10000;
+  private newNodeId = () => {
+    this.nodeId++;
+    return this.nodeId;
   };
 }
 

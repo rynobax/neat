@@ -24,7 +24,7 @@ interface SpeciesGroup {
   numOfChildren: number;
 }
 
-class Trainer {
+class Population {
   genomes: Genome[];
 
   species: Specie[] = [];
@@ -196,4 +196,4 @@ class Trainer {
   }
 }
 
-export default Trainer;
+export default Population;
