@@ -6,7 +6,7 @@ const getPopulation = () => new Population(3, 2, () => 1, {});
 
 describe("initialization", () => {
   test("generates correct initial nodes", () => {
-    const genome = new Genome(getPopulation());
+    const genome = new Genome(getPopulation);
     expect(genome.nodeGenes).toEqual([
       {
         type: NodeType.input,
@@ -37,7 +37,7 @@ describe("initialization", () => {
   });
 
   test("generates correct initial connections", () => {
-    const genome = new Genome(getPopulation());
+    const genome = new Genome(getPopulation);
     const expected = [
       {
         in: 10001,

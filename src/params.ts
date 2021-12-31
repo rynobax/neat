@@ -6,7 +6,11 @@ export const DEFAULT_MODEL_PARAMETERS = {
   // 0.4
   c3: 0.4,
   // 150
-  populationSize: 5,
+  populationSize: 150,
   // 3
   speciesThreshold: 3,
+  // ?
+  generations: 50,
 };
+
+export type ModelParameters = typeof DEFAULT_MODEL_PARAMETERS;

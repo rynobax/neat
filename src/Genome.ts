@@ -48,7 +48,8 @@ class Genome {
   public connectionGenes: ConnectionGene[];
 
   constructor(
-    private population: Population,
+    // this is fn because jest did not like circular reference
+    private population: () => Population,
     nodeGenes?: NodeGene[],
     connectionGenes?: ConnectionGene[]
   ) {
@@ -58,16 +59,16 @@ class Genome {
 
   private initialNodeGenes = () => {
     const nodeGenes: NodeGene[] = [];
-    for (let i = 0; i < this.population.inputLength; i++) {
+    for (let i = 0; i < this.population().inputLength; i++) {
       nodeGenes.push({
-        id: this.population.getNodeId({ in: i, out: null }),
+        id: this.population().getNodeId({ in: i, out: null }),
         type: NodeType.input,
         ndx: i,
       });
     }
-    for (let i = 0; i < this.population.outputLength; i++) {
+    for (let i = 0; i < this.population().outputLength; i++) {
       nodeGenes.push({
-        id: this.population.getNodeId({ in: null, out: i }),
+        id: this.population().getNodeId({ in: null, out: i }),
         type: NodeType.output,
         ndx: i,
       });
@@ -77,11 +78,11 @@ class Genome {
 
   private initialConnectionGenes = () => {
     const connectionGenes: ConnectionGene[] = [];
-    for (let i = 0; i < this.population.inputLength; i++) {
+    for (let i = 0; i < this.population().inputLength; i++) {
       const inId = this.nodeGenes.find(
         (n) => n.type === NodeType.input && n.ndx === i
       ).id;
-      for (let j = 0; j < this.population.outputLength; j++) {
+      for (let j = 0; j < this.population().outputLength; j++) {
         const outId = this.nodeGenes.find(
           (n) => n.type === NodeType.output && n.ndx === j
         ).id;
@@ -89,7 +90,7 @@ class Genome {
           enabled: true,
           in: inId,
           out: outId,
-          innovation: this.population.getInnovationNumber({
+          innovation: this.population().getInnovationNumber({
             in: inId,
             out: outId,
           }),
@@ -157,7 +158,7 @@ class Genome {
       depth++;
     }
 
-    const output: number[] = new Array(this.population.outputLength);
+    const output: number[] = new Array(this.population().outputLength);
     for (const node of this.nodeGenes) {
       if (node.type === NodeType.output) {
         output[node.ndx] = results[node.id].sum;
@@ -215,7 +216,7 @@ class Genome {
         this.connectionGenes.push({
           enabled: true,
           in: start.id,
-          innovation: this.population.getInnovationNumber({
+          innovation: this.population().getInnovationNumber({
             in: start.id,
             out: end.id,
           }),
@@ -238,7 +239,7 @@ class Genome {
     );
     // Add new node
     const newNode = {
-      id: this.population.getNodeId({ in: oldCon.in, out: oldCon.out }),
+      id: this.population().getNodeId({ in: oldCon.in, out: oldCon.out }),
       type: NodeType.hidden,
     } as const;
     this.nodeGenes.push(newNode);
@@ -248,7 +249,7 @@ class Genome {
         in: oldCon.in,
         out: newNode.id,
         enabled: true,
-        innovation: this.population.getInnovationNumber({
+        innovation: this.population().getInnovationNumber({
           in: oldCon.in,
           out: newNode.id,
         }),
@@ -258,7 +259,7 @@ class Genome {
         in: newNode.id,
         out: oldCon.out,
         enabled: true,
-        innovation: this.population.getInnovationNumber({
+        innovation: this.population().getInnovationNumber({
           in: newNode.id,
           out: oldCon.out,
         }),

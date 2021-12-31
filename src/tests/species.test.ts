@@ -1,6 +1,11 @@
-import Population from "../Population";
+import Population, { Specie } from "../Population";
 import Genome, { ConnectionGene, NodeGene, NodeType } from "../Genome";
-import { alignGenomes, combineGenomeConnections, isInSpecie } from "../util";
+import {
+  alignGenomes,
+  combineGenomeConnections,
+  computeNextSpecies,
+  isInSpecie,
+} from "../util";
 import { getInnovationNumber } from "./testUtil";
 import { DEFAULT_MODEL_PARAMETERS } from "../params";
 
@@ -16,29 +21,37 @@ const connectionGenes: ConnectionGene[] = [
 
 describe("isInSpecie", () => {
   test("same species returns true", () => {
-    const genome = new Genome(getPopulation(), nodeGenes, connectionGenes);
+    const genome = new Genome(getPopulation, nodeGenes, connectionGenes);
     expect(
-      isInSpecie(genome, { id: "1", rep: genome }, DEFAULT_MODEL_PARAMETERS)
+      isInSpecie(
+        genome,
+        { id: "1", members: [genome], numOfChildren: 1 },
+        DEFAULT_MODEL_PARAMETERS
+      )
     ).toEqual(true);
   });
 
   test("many excess genome returns false", () => {
-    const genome = new Genome(getPopulation(), nodeGenes, [
+    const genome = new Genome(getPopulation, nodeGenes, [
       { enabled: true, in: 1, innovation: 1, out: 2, weight: 1 },
       { enabled: true, in: 1, innovation: 2, out: 2, weight: 1 },
       { enabled: true, in: 1, innovation: 3, out: 2, weight: 1 },
       { enabled: true, in: 1, innovation: 4, out: 2, weight: 1 },
       { enabled: true, in: 1, innovation: 5, out: 2, weight: 1 },
     ]);
-    const rep = new Genome(getPopulation(), nodeGenes, connectionGenes);
+    const rep = new Genome(getPopulation, nodeGenes, connectionGenes);
     expect(
-      isInSpecie(genome, { id: "1", rep }, DEFAULT_MODEL_PARAMETERS)
+      isInSpecie(
+        genome,
+        { id: "1", members: [rep], numOfChildren: 1 },
+        DEFAULT_MODEL_PARAMETERS
+      )
     ).toEqual(false);
   });
 
   test("many excess rep returns false", () => {
-    const genome = new Genome(getPopulation(), nodeGenes, connectionGenes);
-    const rep = new Genome(getPopulation(), nodeGenes, [
+    const genome = new Genome(getPopulation, nodeGenes, connectionGenes);
+    const rep = new Genome(getPopulation, nodeGenes, [
       { enabled: true, in: 1, innovation: 1, out: 2, weight: 1 },
       { enabled: true, in: 1, innovation: 2, out: 2, weight: 1 },
       { enabled: true, in: 1, innovation: 3, out: 2, weight: 1 },
@@ -46,32 +59,40 @@ describe("isInSpecie", () => {
       { enabled: true, in: 1, innovation: 5, out: 2, weight: 1 },
     ]);
     expect(
-      isInSpecie(genome, { id: "1", rep }, DEFAULT_MODEL_PARAMETERS)
+      isInSpecie(
+        genome,
+        { id: "1", members: [rep], numOfChildren: 1 },
+        DEFAULT_MODEL_PARAMETERS
+      )
     ).toEqual(false);
   });
 
   test("weight differences returns false", () => {
-    const genome = new Genome(getPopulation(), nodeGenes, [
+    const genome = new Genome(getPopulation, nodeGenes, [
       { enabled: true, in: 1, innovation: 1, out: 2, weight: -8 },
     ]);
-    const rep = new Genome(getPopulation(), nodeGenes, [
+    const rep = new Genome(getPopulation, nodeGenes, [
       { enabled: true, in: 1, innovation: 1, out: 2, weight: 8 },
     ]);
     expect(
-      isInSpecie(genome, { id: "1", rep }, DEFAULT_MODEL_PARAMETERS)
+      isInSpecie(
+        genome,
+        { id: "1", members: [rep], numOfChildren: 1 },
+        DEFAULT_MODEL_PARAMETERS
+      )
     ).toEqual(false);
   });
 });
 
 describe("alignGenomes", () => {
   test("works", () => {
-    const genomeA = new Genome(getPopulation(), nodeGenes, [
+    const genomeA = new Genome(getPopulation, nodeGenes, [
       { enabled: true, in: 1, innovation: 1, out: 2, weight: 1 },
       { enabled: true, in: 1, innovation: 2, out: 2, weight: 1 },
       { enabled: true, in: 1, innovation: 3, out: 2, weight: 1 },
       { enabled: true, in: 1, innovation: 6, out: 2, weight: 1 },
     ]);
-    const genomeB = new Genome(getPopulation(), nodeGenes, [
+    const genomeB = new Genome(getPopulation, nodeGenes, [
       { enabled: true, in: 1, innovation: 1, out: 2, weight: 2 },
       { enabled: true, in: 1, innovation: 3, out: 2, weight: 2 },
       { enabled: true, in: 1, innovation: 4, out: 2, weight: 2 },
@@ -109,10 +130,10 @@ describe("alignGenomes", () => {
 
 describe("combineGenomeConnections", () => {
   it("takes from the stronger", () => {
-    const genomeA = new Genome(getPopulation(), nodeGenes, [
+    const genomeA = new Genome(getPopulation, nodeGenes, [
       { enabled: true, in: 1, innovation: 1, out: 2, weight: 1 },
     ]);
-    const genomeB = new Genome(getPopulation(), nodeGenes, [
+    const genomeB = new Genome(getPopulation, nodeGenes, [
       { enabled: true, in: 1, innovation: 1, out: 2, weight: 1 },
       { enabled: true, in: 2, innovation: 2, out: 2, weight: 2 },
     ]);
@@ -122,5 +143,22 @@ describe("combineGenomeConnections", () => {
       { enabled: true, in: 1, innovation: 1, out: 2, weight: 1 },
       { enabled: true, in: 2, innovation: 2, out: 2, weight: 2 },
     ]);
+  });
+});
+
+describe.skip("computeNextSpecies", () => {
+  const params = DEFAULT_MODEL_PARAMETERS;
+  const measureFitness = () => 1;
+
+  it("works for initial group", () => {
+    const prev: Specie[] = [];
+    const genomes = [
+      new Genome(getPopulation),
+      new Genome(getPopulation),
+      new Genome(getPopulation),
+    ];
+    expect(computeNextSpecies(prev, genomes, params, measureFitness)).toEqual(
+      []
+    );
   });
 });

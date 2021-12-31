@@ -1,7 +1,9 @@
+import { v4 as uuid } from "uuid";
 import { last, random, shuffle, sortBy, uniqBy } from "lodash";
 import type Genome from "./Genome";
 import type { ConnectionGene } from "./Genome";
-import type { ModelParameters, Specie } from "./Population";
+import type { Specie } from "./Population";
+import type { ModelParameters } from "./params";
 
 export function takeRandom<T>(arr: Array<T>) {
   return shuffle(arr)[0];
@@ -124,9 +126,7 @@ export function isInSpecie(
   specie: Specie,
   { c1, c2, c3, speciesThreshold }: ModelParameters
 ) {
-  const { rep } = specie;
-
-  const repMax = last(rep.connectionGenes).innovation;
+  const rep = specie.members[0];
 
   const { aDisjoint, aExcess, bDisjoint, bExcess, matching } = alignGenomes(
     genome,
@@ -154,4 +154,71 @@ export function isInSpecie(
   const delta = (c1 * e) / n + (c2 * d) / n + c3 * w;
 
   return delta <= speciesThreshold;
+}
+
+export function computeNextSpecies(
+  prevSpecies: Specie[],
+  genomes: Genome[],
+  parameters: ModelParameters,
+  measureFitness: (genome: Genome) => number
+) {
+  const nextSpecies = [...prevSpecies];
+
+  const speciesGroups = prevSpecies.reduce<Record<string, Specie>>((p, c) => {
+    p[c.id] = { id: c.id, members: [], numOfChildren: 0 };
+    return p;
+  }, {});
+  for (const genome of genomes) {
+    let found = false;
+    for (const specie of nextSpecies) {
+      if (isInSpecie(genome, specie, parameters)) {
+        // add to group
+        speciesGroups[specie.id].members.push(genome);
+        found = true;
+        break;
+      }
+    }
+
+    if (!found) {
+      // make new group
+      const id = uuid();
+      const newSpecie: Specie = {
+        id,
+        members: [genome],
+        numOfChildren: 0,
+      };
+      speciesGroups[newSpecie.id] = newSpecie;
+      nextSpecies.push(newSpecie);
+    }
+  }
+
+  const groupFitnessValues: Record<string, number> = {};
+
+  const sumOfAdjFitnessAvgs = Object.values(speciesGroups).reduce(
+    (sum, specie) => {
+      const groupAdjFitnessSum = specie.members.reduce((sum, genome) => {
+        const rawFitness = measureFitness(genome);
+        const adjFitness = rawFitness / specie.members.length;
+        return sum + adjFitness;
+      }, 0);
+      groupFitnessValues[specie.id] = groupAdjFitnessSum;
+      return sum + groupAdjFitnessSum;
+    },
+    0
+  );
+
+  Object.values(speciesGroups).forEach((specie) => {
+    const fitness = groupFitnessValues[specie.id];
+    if (fitness === 0) return;
+    const pct = fitness / sumOfAdjFitnessAvgs;
+    specie.numOfChildren = Math.round(pct * parameters.populationSize);
+  });
+
+  return Object.values(speciesGroups)
+    .map((e) => ({
+      ...e,
+      // rep is just first member so make sure to shuffle
+      members: shuffle(e.members),
+    }))
+    .filter((e) => e.members.length > 0);
 }
