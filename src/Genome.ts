@@ -50,7 +50,10 @@ class Genome {
   constructor(
     private inputLength: number,
     private outputLength: number,
-    private getInnovationNumber: () => number,
+    private getInnovationNumber: (connection: {
+      in: number;
+      out: number;
+    }) => number,
     nodeGenes?: NodeGene[],
     connectionGenes?: ConnectionGene[]
   ) {
@@ -83,7 +86,7 @@ class Genome {
           enabled: true,
           in: inId,
           out: outId,
-          innovation: this.getInnovationNumber(),
+          innovation: this.getInnovationNumber({ in: inId, out: outId }),
           weight: randomWeight(),
         });
       }
@@ -209,11 +212,10 @@ class Genome {
         (c) => c.in === start.id && c.out === end.id
       );
       if (!exists) {
-        // TODO: Handle identical innovation in same generation
         this.connectionGenes.push({
           enabled: true,
           in: start.id,
-          innovation: this.getInnovationNumber(),
+          innovation: this.getInnovationNumber({ in: start.id, out: end.id }),
           out: end.id,
           weight: randomWeight(),
         });
@@ -240,14 +242,20 @@ class Genome {
         in: oldCon.in,
         out: newNode.id,
         enabled: true,
-        innovation: this.getInnovationNumber(),
+        innovation: this.getInnovationNumber({
+          in: oldCon.in,
+          out: newNode.id,
+        }),
         weight: 1,
       },
       {
         in: newNode.id,
         out: oldCon.out,
         enabled: true,
-        innovation: this.getInnovationNumber(),
+        innovation: this.getInnovationNumber({
+          in: newNode.id,
+          out: oldCon.out,
+        }),
         weight: oldCon.weight,
       }
     );

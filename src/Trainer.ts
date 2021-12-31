@@ -77,6 +77,7 @@ class Trainer {
   // TODO: Handle population failing to increase over time (only take top 2)
   // TODO: Interspecies mating
   private evolve = () => {
+    this.startNewGenerationInnovation();
     const speciesGroups = this.computeSpeciesGroups();
     console.log("after evolution x species: ", speciesGroups.length);
     this.species = speciesGroups.map((s) => ({
@@ -171,10 +172,28 @@ class Trainer {
 
   // TODO: Implement
 
-  private getInnovationNumber = () => {
+  private generationalInnovations: {
+    in: number;
+    out: number;
+    innovation: number;
+  }[] = [];
+
+  getInnovationNumber = (newConnection: { in: number; out: number }) => {
+    const existingInnovation = this.generationalInnovations.find(
+      (i) => i.in === newConnection.in && i.out === newConnection.out
+    );
+    if (existingInnovation) return existingInnovation.innovation;
     this.innovation++;
+    this.generationalInnovations.push({
+      ...newConnection,
+      innovation: this.innovation,
+    });
     return this.innovation;
   };
+
+  startNewGenerationInnovation() {
+    this.generationalInnovations = [];
+  }
 }
 
 export default Trainer;
