@@ -1,8 +1,10 @@
-import { random } from "lodash";
+import { cloneDeep, fill, random } from "lodash";
 import type Population from "./Population";
 import {
   combineGenomeConnections,
   getWeightTweaker,
+  isInputNode,
+  isOutputNode,
   percentChance,
   randomWeight,
   takeRandom,
@@ -101,78 +103,55 @@ class Genome {
     return connectionGenes;
   };
 
-  // TODO: Handle disabled
-  // TODO: Unclear if this is best way, look at his code
   public evaluate = (input: number[]): number[] => {
+    const { activationFn } = this.population().parameters;
     let depth = 0;
 
-    const results: Record<number, { sum: number; left: number }> = {};
-
-    // Determine how many inputs each output node expects
-    this.connectionGenes.forEach((con) => {
-      if (!results[con.out]) results[con.out] = { sum: 0, left: 0 };
-      results[con.out].left++;
+    const inputActivations: Record<number, number> = {};
+    this.nodeGenes.filter(isInputNode).forEach((node) => {
+      inputActivations[node.id] = input[node.ndx];
     });
 
-    let remainingConnections = [...this.connectionGenes];
+    const enabledConnections = this.connectionGenes.filter((c) => c.enabled);
 
-    while (remainingConnections.length > 0) {
-      // TODO: Base off age
-      if (depth > 10000) throw Error("Evaluate depth overflow");
-      [...remainingConnections].forEach((con) => {
-        const inNode = this.nodeGenes.find((n) => n.id === con.in);
-        if (!inNode)
-          throw Error(
-            `Could not find node for connection ${JSON.stringify(con)}`
-          );
+    // TODO: Better heuristic?
+    const maxLoopDepth = enabledConnections.length * 2;
 
-        let processed = false;
+    const outputNodes = this.nodeGenes.filter(isOutputNode);
+    const nonInputNodes = this.nodeGenes.filter(
+      (n) => n.type !== NodeType.input
+    );
 
-        switch (inNode.type) {
-          case NodeType.input: {
-            const v = input[inNode.ndx] * con.weight;
-            results[con.out].sum += v;
-            results[con.out].left -= 1;
-            processed = true;
-            break;
-          }
-          case NodeType.hidden: {
-            const inputInfo = results[inNode.id];
-            if (!inputInfo) {
-              // TODO: Multiple identical nodes are getting added
-              // TODO: Hidden nodes aren't connected to rest of graph
-              console.log(inNode);
-              console.log(results);
-              console.log(this.nodeGenes);
-              console.log(this.connectionGenes);
-              throw Error(`Missing results for ${JSON.stringify(inNode)}`);
-            }
-            if (inputInfo.left > 0) {
-              // Previous nodes still need to run
-              break;
-            }
-            const v = inputInfo.sum * con.weight;
-            results[con.out].sum += v;
-            results[con.out].left -= 1;
-            processed = true;
-            break;
-          }
-        }
+    const activationSums: Record<number, number> = {};
+    const activationResults: Record<number, number> = { ...inputActivations };
+    let done = false;
+    while (!done) {
+      for (const node of nonInputNodes) {
+        const activeInputConnections = enabledConnections.filter(
+          (c) =>
+            c.out === node.id &&
+            (c.in in activationSums || c.in in inputActivations)
+        );
+        if (activeInputConnections.length === 0) continue;
+        activationSums[node.id] = activeInputConnections.reduce(
+          (sum, c) => sum + (activationResults[c.in] || 0) * c.weight,
+          0
+        );
+      }
 
-        if (processed) {
-          remainingConnections = remainingConnections.filter(
-            (n) => n.innovation !== con.innovation
-          );
-        }
+      Object.entries(activationSums).forEach(([nodeId, sum]) => {
+        activationResults[nodeId] = activationFn(sum);
       });
+
+      done = outputNodes.every((n) => n.id in activationResults);
+
       depth++;
+      if (depth > maxLoopDepth) throw Error("Evaluate depth overflow");
     }
 
     const output: number[] = new Array(this.population().outputLength);
-    for (const node of this.nodeGenes) {
-      if (node.type === NodeType.output) {
-        output[node.ndx] = results[node.id].sum;
-      }
+    for (const node of outputNodes) {
+      output[node.ndx] = activationResults[node.id];
     }
 
     return output;
@@ -209,6 +188,7 @@ class Genome {
   };
 
   // TODO: Find a better way to do this, maybe check source code
+  // TODO: Can this generate circular dependencies?
   addConnection = () => {
     let attempts = 0;
     const n = this.nodeGenes.length;

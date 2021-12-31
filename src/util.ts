@@ -1,7 +1,13 @@
 import { v4 as uuid } from "uuid";
 import { last, random, shuffle, sortBy, uniqBy } from "lodash";
 import type Genome from "./Genome";
-import type { ConnectionGene } from "./Genome";
+import {
+  ConnectionGene,
+  InputNodeGene,
+  NodeGene,
+  NodeType,
+  OutputNodeGene,
+} from "./Genome";
 import type { Specie } from "./Population";
 import type { ModelParameters } from "./params";
 
@@ -80,6 +86,7 @@ export function alignGenomes(a: Genome, b: Genome) {
 
 type WhoIsMoreFit = "a" | "b" | "tie";
 
+// TODO: This should disable stuff when safe
 export function combineGenomeConnections(
   a: Genome,
   b: Genome,
@@ -224,4 +231,12 @@ export function computeNextSpecies(
       members: shuffle(e.members),
     }))
     .filter((e) => e.members.length > 0);
+}
+
+export function isOutputNode(node: NodeGene): node is OutputNodeGene {
+  return node.type === NodeType.output;
+}
+
+export function isInputNode(node: NodeGene): node is InputNodeGene {
+  return node.type === NodeType.input;
 }

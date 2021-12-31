@@ -1,3 +1,5 @@
+const SIGMOID = (x: number) => 1 / (1 + Math.E ** (-4.9 * x));
+
 export const DEFAULT_MODEL_PARAMETERS = {
   // 1
   c1: 1,
@@ -11,6 +13,8 @@ export const DEFAULT_MODEL_PARAMETERS = {
   speciesThreshold: 3,
   // ?
   generations: 50,
+  // SIGMOID
+  activationFn: SIGMOID,
 };
 
 export type ModelParameters = typeof DEFAULT_MODEL_PARAMETERS;
