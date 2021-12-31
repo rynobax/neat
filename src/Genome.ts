@@ -15,18 +15,18 @@ export enum NodeType {
   hidden = "hid",
 }
 
-type HiddenNodeGene = {
+export type HiddenNodeGene = {
   type: NodeType.hidden;
   id: number;
 };
 
-type InputNodeGene = {
+export type InputNodeGene = {
   type: NodeType.input;
   id: number;
   ndx: number;
 };
 
-type OutputNodeGene = {
+export type OutputNodeGene = {
   type: NodeType.output;
   id: number;
   ndx: number;

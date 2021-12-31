@@ -168,6 +168,7 @@ export function computeNextSpecies(
     p[c.id] = { id: c.id, members: [], numOfChildren: 0 };
     return p;
   }, {});
+
   for (const genome of genomes) {
     let found = false;
     for (const specie of nextSpecies) {

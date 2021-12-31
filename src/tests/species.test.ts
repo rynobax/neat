@@ -1,3 +1,5 @@
+import fc, { Arbitrary } from "fast-check";
+
 import Population, { Specie } from "../Population";
 import Genome, { ConnectionGene, NodeGene, NodeType } from "../Genome";
 import {
@@ -6,7 +8,6 @@ import {
   computeNextSpecies,
   isInSpecie,
 } from "../util";
-import { getInnovationNumber } from "./testUtil";
 import { DEFAULT_MODEL_PARAMETERS } from "../params";
 
 const getPopulation = () => new Population(1, 1, () => 1, {});
@@ -185,4 +186,36 @@ describe("computeNextSpecies", () => {
       expect(numNextGenomes).toEqual(popSize);
     });
   });
+
+  // describe("pbt", () => {
+  //   const nodeArb = (): Arbitrary<NodeGene> => fc.record({
+  //     id: fc.uuid(),
+  //     type
+  //   })
+
+  //   const genomeArb = (getPopulation: () => Population): Arbitrary<Genome> =>
+  //     fc.tuple(
+  //       fc.integer({ min: 1, max: 10 }),
+  //       fc.integer({ min: 1, max: 10 })
+  //     ).map(([nodeGenes, connectionGenes]) => {
+  //       return new Genome(getPopulation, nodeGenes, connectionGenes)
+  //     });
+
+  //   it("should keep number of genomes consistant", () => {
+  //     fc.assert(
+  //       fc.property(fc.integer({ min: 1, max: 100 }).map(popSize => fc.), (popSize) => {
+  //         const prev: Specie[] = [];
+  //         const genomes = nGenomes(popSize);
+  //         const next = computeNextSpecies(
+  //           prev,
+  //           genomes,
+  //           { ...DEFAULT_MODEL_PARAMETERS, populationSize: popSize },
+  //           measureFitness
+  //         );
+  //         const numNextGenomes = next.reduce((p, c) => p + c.numOfChildren, 0);
+  //         expect(numNextGenomes).toEqual(popSize);
+  //       })
+  //     );
+  //   });
+  // });
 });
