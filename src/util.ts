@@ -212,6 +212,8 @@ export function computeNextSpecies(
     const fitness = groupFitnessValues[specie.id];
     if (fitness === 0) return;
     const pct = fitness / sumOfAdjFitnessAvgs;
+    // TODO: Sometimes this does not match population size but it seems to
+    // still cluster around populationSize
     specie.numOfChildren = Math.round(pct * parameters.populationSize);
   });
 

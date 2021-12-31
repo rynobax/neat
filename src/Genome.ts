@@ -117,7 +117,8 @@ class Genome {
     let remainingConnections = [...this.connectionGenes];
 
     while (remainingConnections.length > 0) {
-      if (depth > 100) throw Error("Evaluate depth overflow");
+      // TODO: Base off age
+      if (depth > 10000) throw Error("Evaluate depth overflow");
       [...remainingConnections].forEach((con) => {
         const inNode = this.nodeGenes.find((n) => n.id === con.in);
         if (!inNode)
@@ -137,6 +138,15 @@ class Genome {
           }
           case NodeType.hidden: {
             const inputInfo = results[inNode.id];
+            if (!inputInfo) {
+              // TODO: Multiple identical nodes are getting added
+              // TODO: Hidden nodes aren't connected to rest of graph
+              console.log(inNode);
+              console.log(results);
+              console.log(this.nodeGenes);
+              console.log(this.connectionGenes);
+              throw Error(`Missing results for ${JSON.stringify(inNode)}`);
+            }
             if (inputInfo.left > 0) {
               // Previous nodes still need to run
               break;
@@ -192,14 +202,14 @@ class Genome {
       this.addNewNode();
     } else if (percentChance(5)) {
       // add new link (connect two nodes)
-      this.connectNewNodes();
+      this.addConnection();
     }
 
     return newGenome;
   };
 
   // TODO: Find a better way to do this, maybe check source code
-  private connectNewNodes = () => {
+  addConnection = () => {
     let attempts = 0;
     const n = this.nodeGenes.length;
     const maxAttempts = (n * (n - 1)) / 2 + 50;
@@ -231,11 +241,11 @@ class Genome {
     // throw Error("Too many attempts trying to find unconnected nodes");
   };
 
-  private addNewNode = () => {
+  addNewNode = () => {
     const oldCon = takeRandom(this.connectionGenes);
     // Remove old connection
     this.connectionGenes = this.connectionGenes.filter(
-      (c) => c.in === oldCon.in && c.out === oldCon.out
+      (c) => c.innovation !== oldCon.innovation
     );
     // Add new node
     const newNode = {
