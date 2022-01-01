@@ -114,7 +114,7 @@ class Genome {
 
     const enabledConnections = this.connectionGenes.filter((c) => c.enabled);
 
-    // TODO: Better heuristic?
+    // Maybe could find better hueristic
     const maxLoopDepth = enabledConnections.length * 2;
 
     const outputNodes = this.nodeGenes.filter(isOutputNode);

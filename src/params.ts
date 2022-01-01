@@ -12,7 +12,7 @@ export const DEFAULT_MODEL_PARAMETERS = {
   // 3
   speciesThreshold: 3,
   // ?
-  generations: 50,
+  generations: 100,
   // SIGMOID
   activationFn: SIGMOID,
 };

@@ -1,5 +1,6 @@
 import Genome from "./Genome";
-import Population, { ModelParameters } from "./Population";
+import { ModelParameters } from "./params";
+import Population from "./Population";
 
 interface NEATOptions {
   inputLength: number;

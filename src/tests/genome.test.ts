@@ -221,7 +221,7 @@ describe("evaluate", () => {
     const genome = new Genome(getPopulation, nodeGenes, connectionGenes);
     const [res] = genome.evaluate([1]);
     // expect(res).toEqual(192);
-    // TODO: This seems wrong but seems to match original code
+    // This seems wrong but seems to match original code
     expect(res).toEqual(0);
   });
 
@@ -255,7 +255,7 @@ describe("evaluate", () => {
     const genome = new Genome(getPopulation, nodeGenes, connectionGenes);
     const [res1, res2] = genome.evaluate([1, 1]);
     expect(res1).toEqual(51);
-    // TODO: This seems wrong but seems to match original
+    // This seems wrong but seems to match original
     // expect(res2).toEqual(376);
     expect(res2).toEqual(40);
   });

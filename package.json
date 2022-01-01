@@ -18,6 +18,6 @@
     "uuid": "^8.3.2"
   },
   "scripts": {
-    "test-and": "ts-node -T ./test/and.ts"
+    "test-logic": "ts-node -T ./test/logic.ts"
   }
 }

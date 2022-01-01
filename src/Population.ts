@@ -37,22 +37,32 @@ class Trainer {
 
   public run = () => {
     for (let i = 0; i < this.parameters.generations; i++) {
-      console.log("evolution ", i, this.genomes.length, this.species.length);
       this.evolve();
+      console.log(
+        "evolution ",
+        i,
+        this.genomes.length,
+        this.species.length,
+        this.getBestGenome().score
+      );
     }
 
-    let best;
+    return this.getBestGenome().genome;
+  };
+
+  private getBestGenome() {
+    let bestGenome;
     let bestScore = 0;
 
     for (const g of this.genomes) {
       const score = this.measureFitness(g);
       if (score > bestScore) {
-        best = g;
+        bestGenome = g;
         bestScore = score;
       }
     }
-    return best;
-  };
+    return { genome: bestGenome, score: bestScore };
+  }
 
   // TODO: Handle champion
   // TODO: Handle population failing to increase over time (only take top 2)
